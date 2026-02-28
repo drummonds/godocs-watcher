@@ -1,0 +1,4 @@
+b9c33a4e09874fd0e2fa82842e2971e7bbebec28c4a9bb6f5f23bef0b2331890  godocs-watcher_0.1.0_darwin_amd64.tar.gz
+2fc4a525f4817042bf348bac96a18a0457e7e02300d361f3cd74608fc8edc9a6  godocs-watcher_0.1.0_darwin_arm64.tar.gz
+94c9b4adf3ca8fa2ffeeac28e79f4a998245e9f134d0a1c60fb29cffed221dc0  godocs-watcher_0.1.0_linux_amd64.tar.gz
+5461742cc853521e12f2f9453cb4b8f393cab4829759fc6841fa7ee48f34ebd8  godocs-watcher_0.1.0_linux_arm64.tar.gz
