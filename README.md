@@ -57,3 +57,12 @@ Dotfiles and directories are ignored.
 task build    # build binary
 task check    # fmt + vet + test
 ```
+
+## Links
+
+| | |
+|---|---|
+| Documentation | https://h3-godocs-watcher.statichost.page/ |
+| Source (Codeberg) | https://codeberg.org/hum3/godocs-watcher |
+| Mirror (GitHub) | https://github.com/drummonds/godocs-watcher |
+| Docs repo | https://codeberg.org/hum3/godocs-watcher-docs |
