@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	godocsclient "github.com/drummonds/godocs-client"
+	godocsclient "codeberg.org/hum3/godocs-client"
 	"github.com/fsnotify/fsnotify"
 	"gopkg.in/yaml.v3"
 )
