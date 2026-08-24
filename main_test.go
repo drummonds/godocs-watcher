@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	godocsclient "codeberg.org/hum3/godocs-client"
+	godocsclient "git.bytestone.uk/hum3/godocs-client"
 )
 
 func TestLoadConfig(t *testing.T) {
