@@ -42,6 +42,46 @@ The watcher will:
 
 Dotfiles and directories are ignored.
 
+## Scanner integration
+
+godocs-watcher can drive a SANE document scanner (tested with an Epson
+FastFoto FF-680W over the network via the `epsonds` backend) and feed the
+results straight into the upload pipeline. Requires `scanimage` (package
+`sane-utils`).
+
+```yaml
+scanner:
+  enabled: true
+  device: epsonds:net:10.0.0.64
+  source: ADF Front          # or "ADF Duplex"
+  resolution: 300
+  mode: Color                # Lineart | Gray | Color
+  poll_interval: 10s
+  page_height_mm: 297        # A4; 0 = scanner maximum
+  skip_blank_pages: true     # drop blank pages (e.g. backs in duplex mode)
+  blank_ink_pct: 0.2         # pages with less dark-pixel coverage are blank
+```
+
+When enabled, the watcher polls the document feeder every `poll_interval`.
+**Loading a stack of paper into the ADF is the trigger** — within one poll
+interval the whole stack is scanned, assembled into a single multi-page PDF
+(JPEG pages embedded losslessly, no external tools needed), dropped into
+`watch_dir`, and uploaded like any other file. OCR happens server-side in
+godocs.
+
+The scanner's physical button cannot be used on Linux: the `epsonds` SANE
+backend exposes no button/sensor options, and Epson's push-scan only talks
+to their Windows/Mac software. Feeder polling replaces it — load paper and
+walk away.
+
+A one-shot scan (no daemon) is also available:
+
+```bash
+godocs-watcher -scan
+```
+
+Find your device name with `scanimage -L`.
+
 ## Config
 
 | Field | Default | Description |
@@ -50,6 +90,15 @@ Dotfiles and directories are ignored.
 | `watch_dir` | *(required)* | Directory to watch |
 | `settle_time` | `30s` | Duration with no writes before uploading |
 | `delete_after_upload` | `false` | Remove source file after successful upload |
+| `scanner.enabled` | `false` | Poll a SANE scanner and auto-scan when paper is loaded |
+| `scanner.device` | *(required if enabled)* | SANE device name from `scanimage -L` |
+| `scanner.source` | `ADF Front` | `ADF Front` or `ADF Duplex` |
+| `scanner.resolution` | `300` | Scan resolution in dpi |
+| `scanner.mode` | `Color` | `Lineart`, `Gray` or `Color` |
+| `scanner.poll_interval` | `10s` | How often to check the feeder for paper |
+| `scanner.page_height_mm` | `297` | Page scan length (A4); `0` for scanner maximum |
+| `scanner.skip_blank_pages` | `true` | Drop blank pages before building the PDF |
+| `scanner.blank_ink_pct` | `0.2` | Dark-pixel % below which a page counts as blank |
 
 ## Build
 
@@ -62,6 +111,5 @@ task check    # fmt + vet + test
 
 | | |
 |---|---|
-| Documentation | https://h3-godocs-watcher.statichost.page/ |
 | Source (Forgejo) | https://git.bytestone.uk/hum3/godocs-watcher |
 | Mirror (GitHub) | https://github.com/drummonds/godocs-watcher |
