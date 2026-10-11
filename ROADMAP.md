@@ -1,5 +1,9 @@
 # Roadmap
 
+## Done
+
+- Scanner integration (SANE/epsonds, feeder polling, multi-page PDF)
+
 ## Future
 
 - Recursive directory watching

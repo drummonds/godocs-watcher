@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"strings"
@@ -20,15 +21,17 @@ const configFileName = "godocs-watcher.yaml"
 
 // Config holds the YAML configuration.
 type Config struct {
-	GodocsServer      string `yaml:"godocs_server"`
-	WatchDir          string `yaml:"watch_dir"`
-	SettleTime        string `yaml:"settle_time"`
-	DeleteAfterUpload bool   `yaml:"delete_after_upload"`
+	GodocsServer      string        `yaml:"godocs_server"`
+	WatchDir          string        `yaml:"watch_dir"`
+	SettleTime        string        `yaml:"settle_time"`
+	DeleteAfterUpload bool          `yaml:"delete_after_upload"`
+	Scanner           ScannerConfig `yaml:"scanner"`
 }
 
 func defaultConfig() Config {
 	return Config{
 		SettleTime: "30s",
+		Scanner:    defaultScannerConfig(),
 	}
 }
 
@@ -50,7 +53,9 @@ func writeExampleConfig(path string) error {
 		WatchDir:          "/path/to/watch",
 		SettleTime:        "30s",
 		DeleteAfterUpload: false,
+		Scanner:           defaultScannerConfig(),
 	}
+	cfg.Scanner.Device = "epsonds:net:10.0.0.64"
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return err
@@ -61,6 +66,7 @@ func writeExampleConfig(path string) error {
 
 func main() {
 	initCfg := flag.Bool("init", false, "Write an example "+configFileName+" and exit")
+	scanOnce := flag.Bool("scan", false, "Run one scan from the configured scanner into watch_dir and exit")
 	flag.Parse()
 
 	if *initCfg {
@@ -108,6 +114,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	if *scanOnce {
+		if cfg.Scanner.Device == "" {
+			fmt.Fprintf(os.Stderr, "Error: scanner.device must be set in %s\n", configFileName)
+			os.Exit(1)
+		}
+		pdf, pages, err := runScan(cfg.Scanner, cfg.WatchDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Scan error: %v\n", err)
+			os.Exit(1)
+		}
+		if pages == 0 {
+			fmt.Println("Document feeder is empty — nothing scanned")
+			return
+		}
+		fmt.Printf("Scanned %d page(s) → %s\n", pages, pdf)
+		return
+	}
+
 	client := godocsclient.NewClient(cfg.GodocsServer)
 
 	watcher, err := fsnotify.NewWatcher()
@@ -127,6 +151,26 @@ func main() {
 	log.Printf("  watch_dir:  %s", cfg.WatchDir)
 	log.Printf("  settle:     %s", settleTime)
 	log.Printf("  delete:     %v", cfg.DeleteAfterUpload)
+
+	scanDone := make(chan struct{})
+	defer close(scanDone)
+	if cfg.Scanner.Enabled {
+		if cfg.Scanner.Device == "" {
+			fmt.Fprintf(os.Stderr, "Error: scanner.enabled is true but scanner.device is not set\n")
+			os.Exit(1)
+		}
+		if _, err := exec.LookPath("scanimage"); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: scanner.enabled is true but scanimage was not found (install sane-utils)\n")
+			os.Exit(1)
+		}
+		pollInterval, err := time.ParseDuration(cfg.Scanner.PollInterval)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: invalid scanner.poll_interval %q: %v\n", cfg.Scanner.PollInterval, err)
+			os.Exit(1)
+		}
+		log.Printf("  scanner:    %s (%s, %ddpi, poll %s)", cfg.Scanner.Device, cfg.Scanner.Source, cfg.Scanner.Resolution, pollInterval)
+		go scanLoop(cfg.Scanner, cfg.WatchDir, pollInterval, scanDone)
+	}
 
 	// Track pending files: path → last modification time
 	pending := make(map[string]time.Time)
