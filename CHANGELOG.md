@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-11
+
+ - Scanner integration with pure-Go PDF assembly; fix go install (drop replace directive)
+
 ### Added
 - Scanner integration: poll a SANE document scanner (e.g. Epson FF-680W via
   `epsonds`) and auto-scan whenever paper is loaded in the ADF
