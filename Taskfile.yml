@@ -47,21 +47,6 @@ tasks:
     cmds:
       - go mod tidy
 
-  release:
-    desc: "Commit, tag, and release — task release VERSION=v0.1.0 COMMENT='Initial release'"
-    preconditions:
-      - sh: '[[ "{{.VERSION}}" == v* ]]'
-        msg: "VERSION must start with 'v' (e.g. v0.1.0)"
-    deps: [check]
-    requires:
-      vars: [VERSION, COMMENT]
-    cmds:
-      - git add -A
-      - git diff --cached --quiet || git commit -m "{{.COMMENT}}"
-      - git tag -a {{.VERSION}} -m "{{.COMMENT}}"
-      - git push origin main {{.VERSION}}
-      - goreleaser release --clean
-
   clean:
     desc: Remove build artifacts
     cmds:

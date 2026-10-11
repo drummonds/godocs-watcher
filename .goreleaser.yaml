@@ -14,10 +14,21 @@ builds:
       - arm64
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
+
+gitea_urls:
+  api: https://git.bytestone.uk/api/v1
+  download: https://git.bytestone.uk
+
+release:
+  gitea:
+    owner: hum3
+    name: godocs-watcher
+  # tp release writes the release notes; keep them.
+  mode: keep-existing
 
 changelog:
-  sort: asc
+  disable: true
